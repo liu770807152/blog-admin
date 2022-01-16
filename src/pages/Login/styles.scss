@@ -1,0 +1,29 @@
+body {
+	background: #f0f0f0;
+}
+.login {
+	&__body {
+		width: auto;
+		height: 100vh;
+	}
+	&__container {
+		width: 400px;
+	}
+}
+.flex-center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	& > .ant-form-item {
+		margin-bottom: 0;
+	}
+}
+.ant-input-affix-wrapper {
+	padding: 0;
+	& > .ant-input-prefix {
+		margin: 4px;
+	}
+	& > input.ant-input {
+		padding: 0 5px;
+	}
+}
