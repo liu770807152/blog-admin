@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Input, Button, Spin, Form, Checkbox } from 'antd';
+import { Card, Input, Button, Spin, Form, Checkbox, message } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import login from '../../services/login';
 import 'antd/dist/antd.css';
 import './styles.scss';
 
@@ -9,7 +10,7 @@ const Login = () => {
 	const [isLoading, setLoading] = useState(false);
 	const navigate = useNavigate();
 
-	const onFinish = (values) => {
+	const onFinish = ({ username, password, remember }) => {
 		/*
 			values = {
 				username: '',
@@ -18,15 +19,31 @@ const Login = () => {
 			}
 		*/
 		setLoading(true);
-		setTimeout(() => {
-			setLoading(false);
-		}, 1000);
-		navigate('/admin', { replace: true });
+		if (!username) {
+			message.error('Username cannot be empty!');
+			setTimeout(() => setLoading(false), 500);
+			return false;
+		} else if (!password) {
+			message.error('Password cannot be empty!');
+			setTimeout(() => setLoading(false), 500);
+			return false;
+		}
+		login({ username, password }).then((res) => {
+			// prevent frequent login
+			setLoading(true);
+			if (res.status === 'login success') {
+				localStorage.setItem('openId', res.openId);
+				navigate('/admin', { replace: true });
+			} else {
+				message.error('Wrong user name or password!');
+				setTimeout(() => setLoading(false), 500);
+			}
+		});
 	};
 
-	const onFinishFailed = (errorInfo: any) => {
-		console.log('Failed:', errorInfo);
-	};
+	// const onFinishFailed = (errorInfo) => {
+	// 	console.log('Failed:', errorInfo);
+	// };
 
 	return (
 		<main className='login__body flex-center'>
@@ -48,6 +65,7 @@ const Login = () => {
 								<Input
 									prefix={<UserOutlined className='site-form-item-icon' />}
 									placeholder='Username'
+									size='large'
 								/>
 							</Form.Item>
 							<Form.Item
@@ -60,6 +78,7 @@ const Login = () => {
 									prefix={<LockOutlined className='site-form-item-icon' />}
 									type='password'
 									placeholder='Password'
+									size='large'
 								/>
 							</Form.Item>
 							<Form.Item>
@@ -80,11 +99,6 @@ const Login = () => {
 									>
 										Log in
 									</Button>
-								</Form.Item>
-							</div>
-							<div className='flex-center'>
-								<Form.Item>
-									Or <a href='/'>register now!</a>
 								</Form.Item>
 							</div>
 						</Form>

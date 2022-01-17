@@ -7,8 +7,8 @@ const Main = () => {
 	return (
 		<Router>
 			<Routes>
-				<Route path='/login' exact element={<Login />} />
-				<Route path='/admin' element={<Admin />} />
+				<Route path='/' exact element={<Login />} />
+				<Route path='/admin/*' element={<Admin />} />
 			</Routes>
 		</Router>
 	);
