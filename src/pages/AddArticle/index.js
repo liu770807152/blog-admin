@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { marked } from 'marked';
-import { Row, Col, Input, Form, Select, Button, DatePicker } from 'antd';
+import {
+	Row,
+	Col,
+	Input,
+	Form,
+	Select,
+	Button,
+	DatePicker,
+	message,
+} from 'antd';
+import { addArticle, updateArticle } from '../../services/article';
 import './styles.scss';
 
 const { Option } = Select,
@@ -34,8 +44,48 @@ const AddArticle = () => {
 		setIntroductionHtml(html);
 	};
 
-	const onFinish = (values) => {
-		console.log(values);
+	const onFinish = ({ title, type, content, introduction, date }) => {
+		console.log(articleId);
+		if (!title || !type || !content || !introduction || !date) {
+			message.error('Missing required field!');
+			return;
+		}
+		date = date.format('YYYY-MM-DD HH:mm:ss');
+		const articleObj = Object.assign(
+			{},
+			{
+				title,
+				catalogID: type,
+				content,
+				introduction,
+				addTime: date,
+			}
+		);
+		// add article to MySQL
+		if (articleId === 0) {
+			articleObj.viewCount = Math.ceil(Math.ceil(Math.random() * 100) + 1000);
+			addArticle(articleObj)
+				.then((res) => {
+					setArticleId(res.insertId);
+					if (res.succeeded) {
+						message.success('Article posted!');
+					} else {
+						message.error('Post article failure!');
+					}
+				})
+				.catch((reason) => console.error(reason));
+		} else {
+			// update existed article in MySQL
+			articleObj.id = articleId;
+			updateArticle(articleObj)
+				.then((res) => {
+					if (res.succeeded) message.success('Article updated!');
+					else {
+						message.error('Update article failure!');
+					}
+				})
+				.catch((reason) => console.error(reason));
+		}
 	};
 
 	return (
@@ -43,7 +93,7 @@ const AddArticle = () => {
 			name='customized_form_controls'
 			layout='vertical'
 			initialValues={{
-				type: 'Tutorial',
+				type: 2,
 			}}
 			onFinish={onFinish}
 		>
@@ -58,8 +108,8 @@ const AddArticle = () => {
 						<Col span={4}>
 							<Item name={'type'}>
 								<Select size='large'>
-									<Option value={'Tutorial'}>Tutorial</Option>
-									<Option value={'Experience'}>Experience</Option>
+									<Option value={1}>Experience</Option>
+									<Option value={2}>Tutorial</Option>
 								</Select>
 							</Item>
 						</Col>
@@ -118,7 +168,11 @@ const AddArticle = () => {
 						</Col>
 						<Col span={12}>
 							<Item name={'date'}>
-								<DatePicker placeholder='select date' size='large' />
+								<DatePicker
+									placeholder='select date'
+									size='large'
+									format={'YYYY-MM-DD'}
+								/>
 							</Item>
 						</Col>
 					</Row>
