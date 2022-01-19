@@ -1,46 +1,78 @@
 import { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { Layout, Menu, Breadcrumb } from 'antd';
 import {
-	DesktopOutlined,
-	PieChartOutlined,
-	UserOutlined,
+	OrderedListOutlined,
+	EditOutlined,
+	FileAddOutlined,
 } from '@ant-design/icons';
+import PubSub from 'pubsub-js';
 import AddArticle from '../AddArticle';
+import ArticleList from '../ArticleList';
 import './styles.scss';
 
 const { Content, Footer, Sider } = Layout;
-const { SubMenu } = Menu;
 
 const Admin = () => {
 	const [collapse, setCollapse] = useState(false);
+	const [selectedKey, setSelectedKey] = useState('addArticle');
+	const navigate = useNavigate();
 
 	const onCollapse = (collapsed) => {
 		setCollapse(!!collapsed);
 	};
 
+	const handleClickList = (e) => {
+		if (e.key === 'addArticle') {
+			setSelectedKey('addArticle');
+			navigate('/admin/add', { replace: false });
+		}
+		if (e.key === 'editArticle') {
+			setSelectedKey('editArticle');
+			navigate('/admin/edit/1', { replace: false });
+		} else if (e.key === 'listArticle') {
+			setSelectedKey('listArticle');
+			navigate('/admin/list', { replace: false });
+		}
+	};
+
+	PubSub.subscribe('key', (_, data) => {
+		setSelectedKey(data.key);
+	});
+
 	return (
 		<Layout style={{ minHeight: '100vh' }}>
 			<Sider collapsible collapsed={collapse} onCollapse={onCollapse}>
-				<div className='logo' />
-				<Menu theme='dark' defaultSelectedKeys={['1']} mode='inline'>
-					<Menu.Item key='1' icon={<PieChartOutlined />}>
-						Work Station
+				<div className='logo'>
+					<img src='/logo_transparent.png' alt='LOGO' />
+				</div>
+				<Menu
+					theme='dark'
+					defaultSelectedKeys={['addArticle']}
+					selectedKeys={[selectedKey]}
+					mode='inline'
+				>
+					<Menu.Item
+						key='addArticle'
+						icon={<FileAddOutlined />}
+						onClick={handleClickList}
+					>
+						Add Article
 					</Menu.Item>
-					<Menu.Item key='2' icon={<DesktopOutlined />}>
-						Article List
+					<Menu.Item
+						key='listArticle'
+						icon={<OrderedListOutlined />}
+						onClick={handleClickList}
+					>
+						List Article
 					</Menu.Item>
-					<SubMenu key='sub1' icon={<UserOutlined />} title='Management'>
-						<Menu.Item key='3'>Add Article</Menu.Item>
-						<Menu.Item key='4'>Edit Article</Menu.Item>
-					</SubMenu>
-					{/* <SubMenu key='sub2' icon={<TeamOutlined />} title='Team'>
-						<Menu.Item key='6'>Team 1</Menu.Item>
-						<Menu.Item key='8'>Team 2</Menu.Item>
-					</SubMenu>
-					<Menu.Item key='9' icon={<FileOutlined />}>
-						Files
-					</Menu.Item> */}
+					<Menu.Item
+						key='editArticle'
+						icon={<EditOutlined />}
+						onClick={handleClickList}
+					>
+						Edit Article
+					</Menu.Item>
 				</Menu>
 			</Sider>
 			<Layout className='site-layout'>
@@ -55,7 +87,10 @@ const Admin = () => {
 						style={{ padding: 24, minHeight: 360 }}
 					>
 						<Routes>
-							<Route path='/' exact element={<AddArticle />} />
+							<Route path='/' element={<AddArticle />} />
+							<Route path='/add' element={<AddArticle />} />
+							<Route path='/edit/:id' element={<AddArticle />} />
+							<Route path='/list' element={<ArticleList />} />
 						</Routes>
 					</div>
 				</Content>

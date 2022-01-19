@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { marked } from 'marked';
 import {
 	Row,
@@ -10,7 +11,12 @@ import {
 	DatePicker,
 	message,
 } from 'antd';
-import { addArticle, updateArticle } from '../../services/article';
+import moment from 'moment';
+import {
+	addArticle,
+	updateArticle,
+	getArticleById,
+} from '../../services/article';
 import './styles.scss';
 
 const { Option } = Select,
@@ -18,10 +24,17 @@ const { Option } = Select,
 	{ Item } = Form;
 
 const AddArticle = () => {
-	const [articleId, setArticleId] = useState(0); // 文章的ID，如果是0说明是新增加，如果不是0，说明是修改
-	const [markdownContent, setMarkdownContent] = useState(''); //html内容
-	const [introductionHtml, setIntroductionHtml] = useState(''); //简介的html内容
+	const [articleId, setArticleId] = useState(0); // 文章的ID，如果是0说明是新增加; 如果不是0，说明是修改
+	const [articleInfo, setArticleInfo] = useState({
+		title: '',
+		catalogId: '',
+		content: '',
+		introduction: '',
+		addTime: '',
+	});
 	const renderer = new marked.Renderer();
+	const formRef = useRef();
+	const { id } = useParams();
 
 	marked.setOptions({
 		renderer: renderer,
@@ -34,18 +47,49 @@ const AddArticle = () => {
 		smartypants: false,
 	});
 
+	useEffect(() => {
+		(async function getCurArticle() {
+			if (id) {
+				let { data: article } = await getArticleById({ id });
+				if (article.length) {
+					article = article[0];
+					setArticleId(article.id);
+					setArticleInfo(article);
+					article.type = article.catalogId;
+					article.date = moment(article.addTime);
+					formRef.current.setFieldsValue(article);
+				} else {
+					message.error('Fetch article failure!');
+				}
+			} else {
+				const emptyState = {
+					title: '',
+					catalogId: '',
+					content: '',
+					introduction: '',
+					addTime: '',
+				};
+				setArticleInfo(emptyState);
+				emptyState.type = 1;
+				emptyState.date = moment();
+				formRef.current.setFieldsValue(emptyState);
+			}
+		})();
+	}, [id]);
+
 	const changeContent = (e) => {
-		let html = marked(e.target.value);
-		setMarkdownContent(html);
+		const str = e.target.value;
+		let html = marked(str);
+		setArticleInfo({ ...articleInfo, content: html });
 	};
 
 	const changeIntroduction = (e) => {
-		let html = marked(e.target.value);
-		setIntroductionHtml(html);
+		const str = e.target.value;
+		let html = marked(str);
+		setArticleInfo({ ...articleInfo, introduction: html });
 	};
 
 	const onFinish = ({ title, type, content, introduction, date }) => {
-		console.log(articleId);
 		if (!title || !type || !content || !introduction || !date) {
 			message.error('Missing required field!');
 			return;
@@ -55,7 +99,7 @@ const AddArticle = () => {
 			{},
 			{
 				title,
-				catalogID: type,
+				catalogId: type,
 				content,
 				introduction,
 				addTime: date,
@@ -63,10 +107,10 @@ const AddArticle = () => {
 		);
 		// add article to MySQL
 		if (articleId === 0) {
-			articleObj.viewCount = Math.ceil(Math.ceil(Math.random() * 100) + 1000);
+			articleObj.viewCount = 0;
 			addArticle(articleObj)
 				.then((res) => {
-					setArticleId(res.insertId);
+					res.insertId && setArticleId(res.insertId);
 					if (res.succeeded) {
 						message.success('Article posted!');
 					} else {
@@ -93,15 +137,23 @@ const AddArticle = () => {
 			name='customized_form_controls'
 			layout='vertical'
 			initialValues={{
-				type: 2,
+				type: articleInfo?.catalogId ?? 1,
+				title: articleInfo.title,
+				introduction: articleInfo.introduction,
+				content: articleInfo.content,
+				date: articleInfo?.date ?? moment(),
 			}}
 			onFinish={onFinish}
+			ref={formRef}
 		>
 			<Row gutter={5}>
 				<Col span={18}>
 					<Row gutter={10} className='mb-3 space-x-1'>
 						<Col span={18}>
-							<Item name={'title'}>
+							<Item
+								name={'title'}
+								rules={[{ required: true, message: 'Please input title!' }]}
+							>
 								<Input placeholder='blog title' size='large' />
 							</Item>
 						</Col>
@@ -116,11 +168,14 @@ const AddArticle = () => {
 					</Row>
 					<Row gutter={10}>
 						<Col span={12}>
-							<Item name={'content'}>
+							<Item
+								name={'content'}
+								rules={[{ required: true, message: 'Please input content!' }]}
+							>
 								<TextArea
 									className='markdown-content'
 									rows={35}
-									placeholder='enter content'
+									placeholder='content'
 									onChange={changeContent}
 								/>
 							</Item>
@@ -128,45 +183,48 @@ const AddArticle = () => {
 						<Col span={12}>
 							<div
 								className='show-html'
-								dangerouslySetInnerHTML={{ __html: markdownContent }}
+								dangerouslySetInnerHTML={{
+									__html: marked(articleInfo.content),
+								}}
 							></div>
 						</Col>
 					</Row>
 				</Col>
 				<Col span={6}>
-					<Row className='space-y-3'>
-						<Col span={24}>
-							<Row>
-								<Col span={5}>
-									<Item>
-										<Button size='large'>Save</Button>
-									</Item>
-								</Col>
-								<Col span={19}>
-									<Item>
-										<Button type='primary' size='large' htmlType='submit'>
-											Post
-										</Button>
-									</Item>
-								</Col>
-							</Row>
-						</Col>
+					<Row className='space-x-2 mb-3'>
+						<Item>
+							<Button size='large'>Download</Button>
+						</Item>
+						<Item>
+							<Button type='primary' size='large' htmlType='submit'>
+								Post
+							</Button>
+						</Item>
+					</Row>
+					<Row className='mb-4'>
 						<Col className='space-y-2' span={24}>
-							<Item name={'introduction'}>
+							<Item
+								name={'introduction'}
+								rules={[
+									{ required: true, message: 'Please input introduction!' },
+								]}
+							>
 								<TextArea
 									rows={4}
-									placeholder='enter introduction'
+									placeholder='introduction'
 									onChange={changeIntroduction}
 								/>
 							</Item>
 							<div
-								className='introduce-html'
+								className='introduction-html'
 								dangerouslySetInnerHTML={{
-									__html: introductionHtml,
+									__html: marked(articleInfo.introduction),
 								}}
 							></div>
 						</Col>
-						<Col span={12}>
+					</Row>
+					<Row>
+						<Col span={15}>
 							<Item name={'date'}>
 								<DatePicker
 									placeholder='select date'

@@ -1,7 +1,7 @@
 const servicePath = {
 	checkLogin: '/admin/checkLogin',
-	addArticle: '/admin/addArticle',
-	updateArticle: '/admin/updateArticle', //
+	article: '/admin/article',
+	articleList: '/admin/articleList',
 };
 
 export default servicePath;
