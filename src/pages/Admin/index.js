@@ -9,9 +9,10 @@ import {
 import PubSub from 'pubsub-js';
 import AddArticle from '../AddArticle';
 import ArticleList from '../ArticleList';
+import Footer from '../../component/Footer';
 import './styles.scss';
 
-const { Content, Footer, Sider } = Layout;
+const { Content, Sider } = Layout;
 
 const Admin = () => {
 	const [collapse, setCollapse] = useState(false);
@@ -94,9 +95,7 @@ const Admin = () => {
 						</Routes>
 					</div>
 				</Content>
-				<Footer style={{ textAlign: 'center' }}>
-					Made with React & Ant Design. Created by Chris.
-				</Footer>
+				<Footer />
 			</Layout>
 		</Layout>
 	);
