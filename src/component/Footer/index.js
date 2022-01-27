@@ -8,13 +8,13 @@ const Footer = () => {
   return (
     <footer className="footer">
       <div className="flex justify-around">
-        <div className="footer__box">
-          <div className="footer__box--left-logo">
+        <div className="footer__logo-container">
+          <div className="footer__logo-container--left">
             <a href="/">
               <img className="logo" src="/logo_transparent.png" alt="logo"></img>
             </a>
           </div>
-          <div className="footer__box--right-memu">
+          <div className="footer__logo-container--right">
             <div>
               <span>Chris Liu</span>
             </div>
@@ -23,12 +23,12 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        <div className="tools__box">
-          <div className="tools__box--inner">
-            <div className="tools__box--list">
+        <div className="footer__icon-container">
+          <div className="footer__icon-container--inner">
+            <div className="footer__icon-container--list">
               {footerData.map((item) => (
                 <div
-                  className="tools__box--item"
+                  className="footer__icon-container--item"
                   onMouseEnter={() => setActive(item.id)}
                   onMouseLeave={() => setActive(null)}
                   key={item.id}
@@ -37,19 +37,19 @@ const Footer = () => {
                   }}
                 >
                   <i
-                    className="tools__box--icon"
+                    className="footer__icon-container--icon"
                     style={{
                       backgroundImage: `url(${item.icon})`,
                     }}
                   />
-                  <div className="tools__box--desc">
-                    <div className="tools__box--hide-desc"></div>
+                  <div className="footer__icon-container--item-desc">
+                    <div className="footer__icon-container--item-hide-desc"></div>
                     <div
-                      className="tools__box--inner"
+                      className="footer__icon-container--item-desc-inner"
                       style={item.bgColor === '#fff' ? { color: '#333' } : null}
                     >
-                      <p className="tools__box--name">{item.name}</p>
-                      <p className="tools__box--text">{item.description}</p>
+                      <p className="footer__icon-container--name">{item.name}</p>
+                      <p className="footer__icon-container--describe">{item.description}</p>
                     </div>
                   </div>
                 </div>
